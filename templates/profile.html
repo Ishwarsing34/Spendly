@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Your Profile — Spendly{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-grid">
+        <!-- User Info Card -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    {{ user.username[0] | upper }}
+                </div>
+                <h1 class="profile-name">{{ user.username }}</h1>
+                <p class="profile-email">{{ user.email }}</p>
+            </div>
+
+            <div class="profile-details">
+                <div class="detail-row">
+                    <span class="detail-label">Account Status</span>
+                    <span class="detail-value">Active</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Member Since</span>
+                    <span class="detail-value">{{ user.joined }}</span>
+                </div>
+                <div class="detail-row total-row">
+                    <span class="detail-label">Total Spent</span>
+                    <span class="detail-value total-amt">₹{{ "%.2f"|format(total) }}</span>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <a href="{{ url_for('logout') }}" class="btn-ghost">Logout</a>
+                <a href="{{ url_for('add_expense') }}" class="btn-primary">+ Add Expense</a>
+            </div>
+        </div>
+
+        <!-- Expenses Section -->
+        <div class="expenses-section">
+            <div class="section-header">
+                <h2 class="section-title">Recent Expenses</h2>
+                <a href="{{ url_for('add_expense') }}" class="add-link">+ New</a>
+            </div>
+            <div class="expenses-list">
+                {% if expenses %}
+                    {% for exp in expenses %}
+                    <div class="expense-item">
+                        <div class="exp-info">
+                            <span class="exp-cat">{{ exp.category }}</span>
+                            <span class="exp-desc">{{ exp.description or 'No description' }}</span>
+                            <span class="exp-date">{{ exp.date }}</span>
+                        </div>
+                        <div class="exp-right">
+                            <span class="exp-amount">₹{{ "%.2f"|format(exp.amount) }}</span>
+                            <div class="exp-actions">
+                                <a href="{{ url_for('edit_expense', id=exp.id) }}" class="exp-edit-link">Edit</a>
+                                <form action="{{ url_for('delete_expense', id=exp.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="exp-delete-btn" onclick="return confirm('Delete this expense?')">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="empty-state">No expenses logged yet. Start adding some!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 4rem 2rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    .profile-card {
+        background: var(--paper-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 3rem 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        text-align: center;
+        position: sticky;
+        top: 100px;
+    }
+
+    .profile-header {
+        margin-bottom: 2.5rem;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: var(--accent);
+        color: var(--paper);
+        font-family: var(--font-display);
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 4px 12px rgba(26, 71, 42, 0.3);
+    }
+
+    .profile-name {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        color: var(--ink);
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-email {
+        color: var(--ink-muted);
+        font-size: 0.9rem;
+    }
+
+    .profile-details {
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .total-row {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--border);
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .total-amt {
+        color: var(--accent);
+    }
+
+    .detail-label {
+        color: var(--ink-muted);
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: var(--ink);
+    }
+
+    .profile-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* Expenses Section */
+    .expenses-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        color: var(--ink);
+    }
+
+    .add-link {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--accent);
+        transition: opacity 0.2s;
+    }
+
+    .add-link:hover {
+        opacity: 0.7;
+    }
+
+    .expenses-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .expense-item {
+        background: var(--paper-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .expense-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        border-color: var(--accent);
+    }
+
+    .exp-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        flex: 1;
+    }
+
+    .exp-cat {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--accent);
+        letter-spacing: 0.05em;
+    }
+
+    .exp-desc {
+        font-size: 1rem;
+        color: var(--ink);
+        font-weight: 500;
+    }
+
+    .exp-date {
+        font-size: 0.8rem;
+        color: var(--ink-muted);
+    }
+
+    .exp-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.5rem;
+    }
+
+    .exp-amount {
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        color: var(--ink);
+        font-weight: 600;
+    }
+
+    .exp-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .exp-edit-link {
+        font-size: 0.8rem;
+        color: var(--ink-muted);
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .exp-edit-link:hover {
+        color: var(--accent);
+    }
+
+    .exp-delete-btn {
+        background: none;
+        border: none;
+        color: var(--danger);
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        transition: opacity 0.2s;
+    }
+
+    .exp-delete-btn:hover {
+        opacity: 0.7;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: var(--ink-muted);
+        padding: 4rem;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-lg);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+        .profile-card {
+            position: static;
+        }
+    }
+</style>
+{% endblock %}
+}
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        color: var(--ink);
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .expenses-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .expense-item {
+        background: var(--paper-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .expense-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .exp-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        flex: 1;
+    }
+
+    .exp-cat {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--accent);
+        letter-spacing: 0.05em;
+    }
+
+    .exp-desc {
+        font-size: 0.95rem;
+        color: var(--ink);
+        font-weight: 500;
+    }
+
+    .exp-date {
+        font-size: 0.8rem;
+        color: var(--ink-muted);
+    }
+
+    .exp-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-left: 1rem;
+    }
+
+    .exp-edit-link {
+        font-size: 0.85rem;
+        color: var(--ink-muted);
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .exp-edit-link:hover {
+        color: var(--accent);
+    }
+
+    .exp-delete-btn {
+        background: none;
+        border: none;
+        color: var(--danger);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        transition: opacity 0.2s;
+    }
+
+    .exp-delete-btn:hover {
+        opacity: 0.7;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: var(--ink-muted);
+        padding: 3rem;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-lg);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
