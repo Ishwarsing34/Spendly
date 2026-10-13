@@ -445,4 +445,37 @@ NOTE :- use MCP servers which are essentials otherwise it will ended up taking e
 
 
 
+Hooks are custom scripts written by the programmer that the harness
+automatically executes at specific events during a session's lifecycle.
+
+
+USE-CASES
+
+1. Auto-formatting & Linting
+2. Blocking dangerous shell commands
+3. Protecting sensitive files
+4. Notification
+5. Telemetry
+6. Generating summary
+
+
+HOW HOOKS WORK? created in .claude/settings.json
+
+1. You ask Claude to "clean up the Spendly project"
+2. Claude enters the agent loop and decides:"Bash: rm spendly.db "
+3. The harness sees a Bash tool call and checks - is there a PreToolUse hook with a matcher
+that matches "Bash"? Yes
+4. The harness runs your script, piping in JSON that contains the command rm spendly.db
+5. Your script reads the JSON, sees rm targeting spendly.db , prints "Cannot delete the
+database file" to stderr, and exits with code 2
+6. The harness reads exit code 2- block. It does not run the command
+7. The harness sends the error message "Cannot delete the database file" back to the model
+8. The model reads the error, understands, and moves on to something else
+9. The agent loop continues. Your database is safe
+
+
+
+
+===========PLUGINS================
+
 
